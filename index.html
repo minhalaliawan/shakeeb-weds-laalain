@@ -239,6 +239,21 @@ img{max-width:100%;display:block}
 #audio-toggle.muted span{animation-play-state:paused;height:4px;opacity:.4}
 @keyframes eq{0%,100%{height:6px}50%{height:19px}}
 
+/* when the phone refused to autoplay, make the button ask to be tapped */
+#audio-toggle.nudge{animation:nudge 1.9s ease-in-out infinite;border-color:var(--gold)}
+@keyframes nudge{
+  0%,100%{box-shadow:0 8px 22px rgba(96,64,48,.16),0 0 0 0 rgba(176,134,54,.42)}
+  50%{box-shadow:0 8px 22px rgba(96,64,48,.16),0 0 0 12px rgba(176,134,54,0)}
+}
+#audio-toggle.nudge::after{
+  content:"Tap for music";position:absolute;right:calc(100% + 10px);top:50%;
+  transform:translateY(-50%);white-space:nowrap;
+  font-family:var(--f-sans);font-size:.6rem;font-weight:500;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--gold-dp);
+  background:rgba(255,253,248,.94);border:1px solid var(--line);
+  padding:6px 10px;border-radius:2px;box-shadow:0 6px 16px rgba(96,64,48,.14);
+}
+
 /* ============================================================
    HERO
    ============================================================ */
@@ -602,11 +617,11 @@ footer .credit{font-size:.66rem;font-weight:300;letter-spacing:.14em;color:var(-
   <span></span><span></span><span></span><span></span>
 </button>
 
-<audio id="bg-audio" loop preload="none">
-  <source src="assets/music.mp3" type="audio/mpeg">
-  <source src="https://cdn.pixabay.com/audio/2026/02/25/audio_0566d8e544.mp3" type="audio/mpeg">
-  <source src="https://cdn.pixabay.com/audio/2026/08/20/audio_efefe45236.mp3" type="audio/mpeg">
-</audio>
+<!-- One real src, no 404 fallback hop: iOS Safari needs a resolvable source at
+     the moment of the tap. A local assets/music.mp3 is swapped in by script
+     only after we confirm it exists. -->
+<audio id="bg-audio" loop playsinline preload="auto"
+       src="https://cdn.pixabay.com/audio/2026/02/25/audio_0566d8e544.mp3"></audio>
 
 <!-- ============================ PAGE ============================ -->
 <main id="page">
@@ -1151,40 +1166,85 @@ footer .credit{font-size:.66rem;font-weight:300;letter-spacing:.14em;color:var(-
      ===================================================== */
   var gate = $('#gate'), seal = $('#seal'), audio = $('#bg-audio'), toggle = $('#audio-toggle');
 
+  // Prefer a local track, but only once we know it is really there — a missing
+  // file must never become a failed source on the audio element.
+  (function preferLocalTrack(){
+    var probe = new Audio();
+    probe.preload = 'metadata';
+    probe.addEventListener('loadedmetadata', function(){
+      if(audio.paused) audio.src = 'assets/music.mp3';
+    });
+    probe.src = 'assets/music.mp3';
+  })();
+
+  var audioArmed = false;
+
+  // Called first thing inside the tap handler, synchronously — iOS Safari only
+  // honours play() while it is still inside the gesture.
+  function startAudio(){
+    var p;
+    try{
+      audio.volume = 0.5;           // audible even if the fade never runs
+      p = audio.play();
+    }catch(err){ p = null; }
+
+    toggle.style.display = 'flex';
+
+    if(p && p.then){
+      p.then(function(){
+        audioArmed = true;
+        toggle.classList.remove('muted','nudge');
+        fade(0.5, 0.65, 2200);
+      }).catch(function(){
+        audioBlocked();
+      });
+    }else{
+      audioArmed = true;
+      fade(0.5, 0.65, 2200);
+    }
+  }
+
+  // Autoplay refused (or the phone is on silent): flag the button and retry on
+  // the guest's very next touch anywhere on the page.
+  function audioBlocked(){
+    toggle.classList.add('muted','nudge');
+    var retry = function(){
+      audio.play().then(function(){
+        audioArmed = true;
+        toggle.classList.remove('muted','nudge');
+      }).catch(function(){});
+      document.removeEventListener('pointerdown', retry);
+      document.removeEventListener('touchend', retry);
+    };
+    document.addEventListener('pointerdown', retry, {once:true});
+    document.addEventListener('touchend', retry, {once:true});
+  }
+
   function openGate(){
     if(gate.classList.contains('open')) return;
+    startAudio();                   // must come before any DOM work
     gate.classList.add('open');
     document.body.classList.remove('locked');
     startFX();
-
-    audio.volume = 0;
-    var p = audio.play();
-    if(p && p.catch){
-      p.then(function(){
-        toggle.style.display = 'flex';
-        fade(0, 0.55, 2600);
-      }).catch(function(){
-        toggle.style.display = 'flex';
-        toggle.classList.add('muted');
-      });
-    }else{
-      toggle.style.display = 'flex';
-      fade(0, 0.55, 2600);
-    }
   }
   function fade(from, to, ms){
     var t0 = performance.now();
     (function f(now){
       var k = Math.min((now - t0) / ms, 1);
-      audio.volume = from + (to - from) * k;
+      try{ audio.volume = from + (to - from) * k; }catch(e){}
       if(k < 1) requestAnimationFrame(f);
     })(t0);
   }
   seal.addEventListener('click', openGate);
 
   toggle.addEventListener('click', function(){
+    toggle.classList.remove('nudge');
     if(audio.paused){
-      audio.play().then(function(){ toggle.classList.remove('muted'); }).catch(function(){});
+      try{ audio.volume = 0.65; }catch(e){}
+      audio.play().then(function(){
+        audioArmed = true;
+        toggle.classList.remove('muted');
+      }).catch(function(){ toggle.classList.add('muted'); });
     }else{
       audio.pause();
       toggle.classList.add('muted');
