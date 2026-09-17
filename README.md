@@ -1,4 +1,4 @@
-# Ahmed Shakeeb &amp; Lalain Fatima — Wedding Invitation
+# Ahmed Shakeeb &amp; Dr. Lalain Fatima — Wedding Invitation
 
 A single-file static invitation site. No build step, no dependencies, no backend.
 Open `index.html` in a browser and it works.
@@ -78,7 +78,7 @@ Everything lives in `index.html`.
 
 - **Names, dates, venues** — in the `<article class="ev">` blocks
 - **WhatsApp number** — `var PHONE = '923335101170';` near the bottom of the script
-- **Colours** — the `:root` block at the top of the `<style>`
+- **Colours** — the `:root` block at the top of the `<style>` (ivory + gold, light theme)
 - **Map links** — the `Location` buttons currently use Google Maps *search*
   queries. Replace each `href` with an exact `maps.app.goo.gl/...` pin when you
   have one.
