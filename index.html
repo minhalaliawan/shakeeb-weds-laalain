@@ -189,9 +189,16 @@ img{max-width:100%;display:block}
 
 .gate-name{
   font-family:var(--f-script);color:var(--gold-lt);
-  font-size:clamp(2rem,10vw,3.4rem);line-height:1.2;
-  margin:.3rem 0 .1rem;max-width:100%;
+  font-size:clamp(1.65rem,8vw,2.9rem);line-height:1.18;
+  margin:.35rem 0 .15rem;max-width:100%;
+  display:flex;flex-direction:column;align-items:center;
   text-shadow:0 0 30px rgba(226,185,107,.35);
+}
+.gate-name span{max-width:100%;padding:0 .06em .06em}
+.gate-name em{
+  font-family:var(--f-serif);font-style:italic;
+  font-size:clamp(.92rem,3.4vw,1.3rem);
+  color:var(--gold);margin:.04em 0;text-shadow:none;
 }
 
 .seal{
@@ -568,6 +575,9 @@ footer .credit{font-size:.66rem;font-weight:200;letter-spacing:.14em;color:rgba(
 
 /* short screens (small phones, landscape) */
 @media (max-height:740px){
+  .gate-name{font-size:clamp(1.45rem,7vw,2.3rem)}
+  .seal{width:100px;height:100px;margin-bottom:1rem}
+  .seal .mono{font-size:1.6rem}
   .hero{padding-block:clamp(40px,6vh,64px)}
   .bismillah{line-height:1.7}
   .mandala{width:clamp(76px,17vw,116px);margin:.8rem 0 .6rem}
@@ -609,7 +619,11 @@ footer .credit{font-size:.66rem;font-weight:200;letter-spacing:.14em;color:rgba(
     </button>
 
     <p class="eyebrow" id="gate-sub">Wedding Invitation</p>
-    <h1 class="gate-name">Shakeeb &amp; Lalain</h1>
+    <h1 class="gate-name">
+      <span>Ahmed Shakeeb</span>
+      <em>&amp;</em>
+      <span>Dr. Lalain Fatima</span>
+    </h1>
     <div class="orn" style="max-width:230px"><i></i></div>
     <p class="eyebrow" id="gate-date" style="letter-spacing:.26em">23 · 24 · 25 October 2026</p>
     <p class="gate-hint">Tap the seal to open</p>
