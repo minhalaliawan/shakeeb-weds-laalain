@@ -194,7 +194,7 @@ img{max-width:100%;display:block}
   display:flex;flex-direction:column;align-items:center;
   text-shadow:0 0 30px rgba(226,185,107,.35);
 }
-.gate-name span{max-width:100%;padding:0 .06em .06em}
+.gate-name span{max-width:100%;padding:0 .06em .06em;white-space:nowrap}
 .gate-name em{
   font-family:var(--f-serif);font-style:italic;
   font-size:clamp(.92rem,3.4vw,1.3rem);
@@ -316,11 +316,11 @@ img{max-width:100%;display:block}
 .names{display:flex;flex-direction:column;align-items:center;gap:0;margin:.15rem 0 .5rem;width:100%}
 .name{
   font-family:var(--f-script);
-  font-size:clamp(2.2rem,9.2vw,4.9rem);
+  font-size:clamp(2.1rem,8.6vw,4.4rem);
   line-height:1.16;
   padding:0 .08em .1em;
   max-width:100%;
-  overflow-wrap:break-word;
+  white-space:nowrap;
   text-shadow:0 0 36px rgba(226,185,107,.28);
 }
 .amp{
@@ -1368,6 +1368,38 @@ footer .credit{font-size:.66rem;font-weight:200;letter-spacing:.14em;color:rgba(
       window.open('https://wa.me/' + PHONE + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
     }, 320);
   });
+
+  /* =====================================================
+     FIT THE SCRIPT NAMES
+     The names sit on one line in a script face. A vw clamp alone cannot be
+     right on every screen and font fallback, so measure each name and shrink
+     it until it genuinely fits its container.
+     ===================================================== */
+  function fitNames(){
+    var els = $$('.names .name').concat($$('.gate-name span'), $$('.hero-intro strong'));
+    els.forEach(function(el){
+      el.style.fontSize = '';                       // back to the CSS size first
+      var box = el.closest('.hero-inner, .gate-inner, .hero-intro') || el.parentElement;
+      if(!box) return;
+      var cs = getComputedStyle(box);
+      var avail = box.clientWidth
+                - parseFloat(cs.paddingLeft || 0)
+                - parseFloat(cs.paddingRight || 0) - 6;
+      if(avail <= 0) return;
+      var size = parseFloat(getComputedStyle(el).fontSize), guard = 0;
+      while(el.scrollWidth > avail && size > 11 && guard < 90){
+        size *= 0.97;
+        el.style.fontSize = size.toFixed(2) + 'px';
+        guard++;
+      }
+    });
+  }
+  fitNames();
+  // the script face changes the metrics, so measure again once it has loaded
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitNames).catch(function(){});
+  var fitT;
+  addEventListener('resize', function(){ clearTimeout(fitT); fitT = setTimeout(fitNames, 120); }, {passive:true});
+  addEventListener('orientationchange', function(){ setTimeout(fitNames, 260); });
 
   addEventListener('keydown', function(e){
     if((e.key === 'Enter' || e.key === ' ') && document.activeElement === seal) openGate();
