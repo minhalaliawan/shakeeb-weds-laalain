@@ -1,4 +1,4 @@
-# Ahmed Shakeeb &amp; Dr. Lalain Fatima — Wedding Invitation
+# Ahmed Shakeeb &amp; Dr. Laalain Fatima — Wedding Invitation
 
 A single-file static invitation site. No build step, no dependencies, no backend.
 Open `index.html` in a browser and it works.
