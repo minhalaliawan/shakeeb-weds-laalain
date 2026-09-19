@@ -195,6 +195,7 @@ img{max-width:100%;display:block}
   text-shadow:0 0 30px rgba(226,185,107,.35);
 }
 .gate-name span{max-width:100%;padding:0 .06em .06em;white-space:nowrap}
+.bismillah,.hero-place,.hero-date,.gate-inner .eyebrow,.gate-hint{white-space:nowrap}
 .gate-name em{
   font-family:var(--f-serif);font-style:italic;
   font-size:clamp(.92rem,3.4vw,1.3rem);
@@ -1411,15 +1412,25 @@ footer .credit{font-size:.66rem;font-weight:200;letter-spacing:.14em;color:rgba(
   function fitNames(){
     var PAD = 14;   // breathing room inside the inner line, each side
 
-    // hero: names and a personalised guest name sit inside the hero arch
+    // hero: hold the whole column inside the arch's inner line, so wrapping
+    // text wraps inside it, then size the single-line pieces to fit
     var heroInner = innerArchWidth($('.hero-arch'), 104, 496) - PAD * 2;
-    var heroBox   = $('.hero-inner') ? $('.hero-inner').clientWidth - 8 : heroInner;
-    fitGroup($$('.names .name'), Math.min(heroInner, heroBox));
-    fitGroup($$('.hero-intro strong'), Math.min(heroInner, heroBox));
+    var hi = $('.hero-inner');
+    if(hi) hi.style.maxWidth = heroInner > 0 ? Math.floor(heroInner) + 'px' : '';
+    var heroAvail = hi ? Math.min(heroInner, hi.clientWidth - 8) : heroInner;
+    fitGroup($$('.names .name'), heroAvail);          // both names share one size
+    fitGroup($$('.hero-intro strong'), heroAvail);
+    fitEach($$('.bismillah, .hero-place, .hero-date'), heroAvail);
 
-    // gate: the opening screen's names sit inside the gate arch
+    // gate: the opening screen, inside the gate arch's inner line
     var gateInner = innerArchWidth($('.gate-arch'), 100, 500) - PAD * 2;
     fitGroup($$('.gate-name span'), gateInner);
+    fitEach($$('.gate-inner .eyebrow, .gate-hint'), gateInner);
+  }
+
+  // Lines of different lengths that should each fit on their own
+  function fitEach(els, avail){
+    els.forEach(function(el){ fitGroup([el], avail); });
   }
   fitNames();
   // the script face changes the metrics, so measure again once it has loaded
